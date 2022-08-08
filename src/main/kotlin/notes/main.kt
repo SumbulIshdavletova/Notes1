@@ -39,7 +39,7 @@ class NoteService : ServiceForGeneric<Note> {
 
     private var notes = emptyArray<Note>()
     private var nId = 0
-    private var coms = emptyArray<Comment>()
+    private var coms = mutableListOf<Comment>()
     private var cid = 0
 
     override fun add(elem: Note): Note {
