@@ -8,7 +8,7 @@ data class Note(
     val commentPrivacy: Int = 0,
     val privacyView: String = "privacy",
     val privacyComment: String = "privacy",
-    val comments: MutableList<Comment> = emptyList<Comment>() as MutableList<Comment>,
+    val comments: MutableList<Comment>,
     val deletedNotes: Boolean = false
 ) {
     override fun toString(): String {
@@ -34,6 +34,7 @@ interface ServiceForGeneric<N> {
 }
 
 class NoteWasDeletedException : RuntimeException()
+class CommentWasDeletedException : RuntimeException()
 
 class NoteService : ServiceForGeneric<Note> {
 
@@ -90,30 +91,6 @@ class NoteService : ServiceForGeneric<Note> {
         throw NoteWasDeletedException()
     }
 
-
-    override fun get(): String {
-        for ((index, note) in notes.withIndex()) {
-            if (!note.deletedNotes) {
-                var str = notes[index]
-                return str.toString()
-            }
-        }
-        return "No notes"
-    }
-
-
-    fun getById(elem: Note): String {
-        for ((index, list) in notes.withIndex()) {
-            if (elem.nId == list.nId) {
-                if (!elem.deletedNotes) {
-                    var str = notes[index]
-                    return str.toString()
-                }
-            }
-        }
-        throw NoteWasDeletedException()
-    }
-
     override fun restore(elem: Note): Boolean {
         for ((index, deleted) in notes.withIndex()) {
             if (elem.nId == nId) {
@@ -134,6 +111,29 @@ class NoteService : ServiceForGeneric<Note> {
         return false
     }
 
+    override fun get(): String {
+        for ((index, elem) in notes.withIndex()) {
+            if (!elem.deletedNotes) {
+                println(elem)
+            }
+        }
+        return "No notes"
+    }
+
+
+    fun getById(idToDelete: Int): String {
+        for ((index, list) in notes.withIndex()) {
+            if (idToDelete == list.nId) {
+                if (!list.deletedNotes) {
+                    var str = notes[index]
+                    return str.toString()
+                }
+            }
+        }
+        throw NoteWasDeletedException()
+    }
+
+
     @Throws(NoteWasDeletedException::class)
     fun createComment(elem: Note, com: Comment): Comment {
         for ((index, noteToComment) in notes.withIndex()) {
@@ -148,21 +148,12 @@ class NoteService : ServiceForGeneric<Note> {
     }
 
     @Throws(NoteWasDeletedException::class)
-    fun deleteComment(elem: Note, com: Comment): Boolean {
+    fun deleteComment(elem: Note): Boolean {
         for ((index, noteToComment) in notes.withIndex()) {
             if (elem.nId == noteToComment.nId) {
                 if (!noteToComment.deletedNotes) {
-                    if (!com.deleteComment) {
-                        coms[index] = com.copy(
-                            com.cid,
-                            com.ownerId,
-                            com.replyTo,
-                            com.message,
-                            com.guid,
-                            com.deleteComment
-                        )
-                        return true
-                    }
+                    notes[index] = noteToComment.copy()
+                    return true
                 }
             }
         }
@@ -192,18 +183,12 @@ class NoteService : ServiceForGeneric<Note> {
         throw NoteWasDeletedException()
     }
 
-    fun editComment(com: Comment): Boolean {
+    @Throws(NoteWasDeletedException::class)
+    fun editComment(elem: Note): Boolean {
         for ((index, noteToComment) in notes.withIndex()) {
-            if (!noteToComment.deletedNotes) {
-                if (!com.deleteComment) {
-                    coms[index] = com.copy(
-                        com.cid,
-                        com.ownerId,
-                        com.replyTo,
-                        com.message,
-                        com.guid,
-                        com.deleteComment
-                    )
+            if (elem.nId == noteToComment.nId) {
+                if (!noteToComment.deletedNotes) {
+                    notes[index] = elem.copy()
                     return true
                 }
             }
@@ -211,9 +196,16 @@ class NoteService : ServiceForGeneric<Note> {
         throw NoteWasDeletedException()
     }
 
+    fun getComment(): String {
+        for ((index, elem) in coms.withIndex()) {
+            if (!elem.deleteComment) {
+                println(elem.message)
+            }
+        }
+        return "No notes"
+    }
 }
 
 
 fun main() {
-
 }
